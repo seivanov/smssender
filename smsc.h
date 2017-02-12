@@ -6,10 +6,18 @@
 #define SMSSENDER_SMSC_H
 
 #include "gateway.h"
+#include <map>
 
 class smsc : gateway {
 
+    public:
 
+        smsc();
+
+    private:
+
+        std::string base_url;
+        std::map<std::string, std::string> command_urls;
 
 };
 

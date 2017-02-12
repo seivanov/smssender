@@ -3,6 +3,7 @@
 /* libcurl4-gnutls-dev */
 #include <curl/curl.h>
 #include <string.h>
+#include <openssl/md5.h>
 
 struct curl_fetch_st {
     char *payload;
@@ -35,11 +36,40 @@ size_t curl_callback (void *contents, size_t size, size_t nmemb, void *userp) {
 
 }
 
+std::string md5(char *str) {
+
+    std::string result;
+
+    MD5_CTX md5handler;
+    unsigned char *md5digest = new unsigned char[MD5_DIGEST_LENGTH];
+
+    MD5_Init(&md5handler);
+    MD5_Update(&md5handler, str, strlen(str));
+    MD5_Final(md5digest,&md5handler);
+
+    int i = 0;
+    char p[10];
+    for (i=0;i<MD5_DIGEST_LENGTH;i++) {
+        sprintf(p, "%02x", md5digest[i]);
+        result.append(p);
+    };
+
+    return result;
+
+}
+
 
 int main() {
 
+    char tmp[] = "185031";
+    std::string passwd = md5(tmp);
+
     CURL *ch;
-    char url[] = "https://smsc.ru/sys/send.php?login=<login>&psw=<password>&phones=<phones>&mes=<message>&cost=1";
+    char url[] = "https://smsc.ru/sys/send.php?login=anton_t001&psw=<password>&phones=89111234545&mes=test&cost=1";
+
+    std::string pre_url("https://smsc.ru/sys/send.php?login=anton_t001&psw=");
+    pre_url += passwd + "&phones=89111234545&mes=test&cost=1";
+
     int rcode;
     struct curl_fetch_st curl_fetch;
     struct curl_fetch_st *cf = &curl_fetch;
@@ -52,7 +82,7 @@ int main() {
     }
 
     curl_easy_setopt(ch, CURLOPT_CUSTOMREQUEST, "POST");
-    curl_easy_setopt(ch, CURLOPT_URL, url);
+    curl_easy_setopt(ch, CURLOPT_URL, pre_url.c_str());
     curl_easy_setopt(ch, CURLOPT_WRITEFUNCTION, curl_callback);
     curl_easy_setopt(ch, CURLOPT_WRITEDATA, (void *) cf);
 
